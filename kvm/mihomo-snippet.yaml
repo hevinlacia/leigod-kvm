@@ -1,0 +1,52 @@
+# 模式 B (默认): SOCKS5 + mihomo 按进程名分流
+# VM IP: 192.168.122.10  SOCKS5 端口: 1080
+#
+# mihomo 的 PROCESS-NAME 规则在 TUN 模式下通过 /proc 匹配进程名
+# 用 ./kvm/find-game-process.sh 监控游戏进程名，然后添加到下方规则
+
+proxies:
+  - name: "Leigod-OpenWrt-SOCKS5"
+    type: socks5
+    server: 192.168.122.10
+    port: 1080
+    udp: true
+    skip-cert-verify: true
+
+proxy-groups:
+  - name: "Game-Acceleration"
+    type: select
+    proxies:
+      - "Leigod-OpenWrt-SOCKS5"
+      - DIRECT
+
+rules:
+  # ── Steam 客户端 ──
+  - PROCESS-NAME,steam,Game-Acceleration
+
+  # ── 常见 Steam 游戏进程名 ──
+  # 原生 Linux 游戏:
+  - PROCESS-NAME,csgo_linux64,Game-Acceleration
+  - PROCESS-NAME,dota2,Game-Acceleration
+  - PROCESS-NAME,cs2,Game-Acceleration
+  - PROCESS-NAME,hl2_linux,Game-Acceleration
+  - PROCESS-NAME,portal2_linux,Game-Acceleration
+  - PROCESS-NAME,tf2,Game-Acceleration
+
+  # Proton/Wine 游戏 (进程名通常为 .exe):
+  # 用 find-game-process.sh 找到你的游戏的进程名后添加:
+  # - PROCESS-NAME,game_x64.exe,Game-Acceleration
+  # - PROCESS-NAME,Helldivers2.exe,Game-Acceleration
+
+  # ── Steam 内容/下载服务器 ──
+  - DOMAIN-SUFFIX,steamserver.net,Game-Acceleration
+  - DOMAIN-SUFFIX,steamcontent.com,Game-Acceleration
+  - DOMAIN-SUFFIX,steampowered.com,Game-Acceleration
+  - DOMAIN-SUFFIX,steamstatic.com,Game-Acceleration
+
+  # ── 其他常见游戏平台 ──
+  # - PROCESS-NAME,EpicGamesLauncher,Game-Acceleration
+  # - PROCESS-NAME,Origin,Game-Acceleration
+  # - PROCESS-NAME,riotclientservice,Game-Acceleration
+
+  # ── 默认直连 ──
+  - MATCH,DIRECT
